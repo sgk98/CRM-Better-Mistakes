@@ -126,24 +126,20 @@ def topk_accuracy(prediction,target,k=5):
     return 0
 
 
-def get_prediction(pred,C):
-    '''Re-Ranking single prediction using CRM'''
-    cur_max=-1
-    max_score=1000000000000000000000000
-    overall_score=0.0
-    output_pred=softmax(np.array([-1.0*np.dot(pred,C[i]).sum() for i in range(len(pred))]))
-    return output_pred
 
 def get_all_cost_sensitive(output,distances,classes):
     '''Re-Rank all predictions in the dataset using CRM'''
+    
     num_classes=len(classes)
     C=[[0 for i in range(num_classes)] for j in range(num_classes)]
     for i in range(num_classes):
         for j in range(num_classes):
             C[i][j]=distances[(classes[i],classes[j])]
 
-    final=[get_prediction(i,C) for i in output]
-    return np.array(final)
+    final=np.dot(output,C)
+    return -1*final
+
+    
 
 def get_topk(prediction,target,distances,classes,k=1):
     '''Computing hierarchical distance@k'''
@@ -207,7 +203,7 @@ def get_metrics(opts,output,target,distances,classes):
 
  
 
-def main(opts,model_path,save_name):
+def main(opts,model_path):
 
 
     test_dir = os.path.join(opts.data_path, "test")
@@ -263,16 +259,15 @@ def main(opts,model_path,save_name):
     test_output=np.array(test_output)
     test_target=np.array(test_target)
 
-    print("Original Numbers are:")
     if opts.loss!='yolo-v2':
         softmax_output=row_softmax(test_output)
     else:
         softmax_output=test_output
-    model_ece=guo_ECE(s_output,test_target)
-    model_mce=MCE(s_output,test_target)
-    print("ECE:",orig_ece)
-    print("MCE:",orig_mce)
-    result=get_metrics(softmax_output,test_target,distances,classes)
+    model_ece=guo_ECE(softmax_output,test_target)
+    model_mce=MCE(softmax_output,test_target)
+    print("ECE:",model_ece)
+    print("MCE:",model_mce)
+    result=get_metrics(opts,softmax_output,test_target,distances,classes)
     result.append(model_ece)
     result.append(model_mce)
     return result
