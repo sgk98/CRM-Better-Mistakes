@@ -4,8 +4,6 @@ import json
 import shutil
 import numpy as np
 from distutils.util import strtobool as boolean
-from pprint import PrettyPrinter
-import pickle
 
 import torch
 import torch.optim
@@ -17,24 +15,19 @@ import torch.utils.data.distributed
 import torchvision.datasets as datasets
 import torchvision.models as models
 
-from better_mistakes.util.rand import make_deterministic
 from better_mistakes.util.folders import get_expm_folder
 from better_mistakes.util.label_embeddings import create_embedding_layer
-from better_mistakes.util.devise_and_bd import generate_sorted_embedding_tensor
 from better_mistakes.util.config import load_config
 from better_mistakes.data.softmax_cascade import SoftmaxCascade
 from better_mistakes.data.transforms import train_transforms, val_transforms
 from better_mistakes.model.init import init_model_on_gpu
 from better_mistakes.model.run_xent import run
 from better_mistakes.model.run_nn import run_nn
-from better_mistakes.model.labels import make_all_soft_labels
-from better_mistakes.model.losses import HierarchicalCrossEntropyLoss, CosineLoss, RankingLoss, CosinePlusXentLoss, YOLOLoss
 from better_mistakes.trees import load_hierarchy, get_weighting, load_distances, get_classes
 
-from helper import *
-import math
-import pickle
+from helper import guo_ECE,MCE
 import heapq
+import math
 
 torch.backends.cudnn.benchmark = True
 MODEL_NAMES = sorted(name for name in models.__dict__ if name.islower() and not name.startswith("__") and callable(models.__dict__[name]))
@@ -60,17 +53,8 @@ def _load_checkpoint(opts, model, optimizer,model_path):
                 checkpoint = torch.load(os.path.join(opts.pretrained_folder, "checkpoint.pth.tar"))
             else:
                 checkpoint = torch.load(opts.pretrained_folder)
-            if opts.devise or opts.barzdenzler:
-                model_dict = model.state_dict()
-                pretrained_dict = checkpoint["state_dict"]
-                # filter out FC layer
-                pretrained_dict = {k: v for k, v in pretrained_dict.items() if k not in ["fc.1.weight", "fc.1.bias"]}
-                # overwrite entries in the existing state dict
-                model_dict.update(pretrained_dict)
-                # load the new state dict
-                model.load_state_dict(pretrained_dict, strict=False)
-            else:
-                model.load_state_dict(checkpoint["state_dict"], strict=False)
+
+            model.load_state_dict(checkpoint["state_dict"], strict=False)
             steps = 0
             print("=> loaded pretrained checkpoint '{}' (epoch {})".format(opts.pretrained_folder, checkpoint["epoch"]))
         else:
@@ -86,22 +70,7 @@ def _select_optimizer(model, opts):
     elif opts.optimizer == "adam":
         return torch.optim.Adam(model.parameters(), opts.lr, weight_decay=opts.weight_decay, amsgrad=False)
     elif opts.optimizer == "adam_amsgrad":
-        if opts.devise or opts.barzdenzler:
-            return torch.optim.Adam(
-                [
-                    {"params": model.conv1.parameters()},
-                    {"params": model.layer1.parameters()},
-                    {"params": model.layer2.parameters()},
-                    {"params": model.layer3.parameters()},
-                    {"params": model.layer4.parameters()},
-                    {"params": model.fc.parameters(), "lr": opts.lr_fc, "weight_decay": opts.weight_decay_fc},
-                ],
-                lr=opts.lr,
-                weight_decay=opts.weight_decay,
-                amsgrad=True,
-            )
-        else:
-            return torch.optim.Adam(model.parameters(), opts.lr, weight_decay=opts.weight_decay, amsgrad=True, )
+        return torch.optim.Adam(model.parameters(), opts.lr, weight_decay=opts.weight_decay, amsgrad=True, )
     elif opts.optimizer == "rmsprop":
         return torch.optim.RMSprop(model.parameters(), opts.lr, weight_decay=opts.weight_decay, momentum=0)
     elif opts.optimizer == "SGD":
@@ -117,14 +86,6 @@ def row_softmax(output):
     '''Compute Row-Wise SoftMax given a matrix of logits'''
     new=np.array([softmax(i) for i in output])
     return new
-
-def topk_accuracy(prediction,target,k=5):
-    ind=heapq.nlargest(k, range(len(prediction)), prediction.take)
-    for i in ind:
-        if i==target:
-            return 1
-    return 0
-
 
 
 def get_all_cost_sensitive(output,distances,classes):
@@ -205,11 +166,13 @@ def get_metrics(opts,output,target,distances,classes):
 
 def main(opts,model_path):
 
-
+    ##Setup Dataset
     test_dir = os.path.join(opts.data_path, "test")
     test_dataset = datasets.ImageFolder(test_dir, val_transforms(opts.data, resize=(224,224),normalize=True))
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=opts.batch_size, shuffle=False, num_workers=opts.workers, pin_memory=True, drop_last=False)
     gpus_per_node=1
+
+    ##Load Hierarchy Information
     distances = load_distances(opts.data, 'ilsvrc', opts.data_dir)
     hierarchy = load_hierarchy(opts.data, opts.data_dir)
     if opts.loss == "yolo-v2":
@@ -229,7 +192,6 @@ def main(opts,model_path):
             return cascade.final_probabilities(output)[:, :num_leaf_classes]
 
 
-
     model = init_model_on_gpu(gpus_per_node, opts)
 
     # setup optimizer
@@ -243,7 +205,7 @@ def main(opts,model_path):
     model.eval()
     torch.no_grad()
 
-
+    ##Iterate Over Dataset and collect logits and labels
     test_output=[]
     test_target=[]
     for batch_idx,(embeddings,target) in enumerate(test_loader):
@@ -259,10 +221,13 @@ def main(opts,model_path):
     test_output=np.array(test_output)
     test_target=np.array(test_target)
 
+    ##The corrector applies softmax cascade for YOLOv2
     if opts.loss!='yolo-v2':
         softmax_output=row_softmax(test_output)
     else:
         softmax_output=test_output
+
+    ##Compute Metrics and Return Logs
     model_ece=guo_ECE(softmax_output,test_target)
     model_mce=MCE(softmax_output,test_target)
     print("ECE:",model_ece)
@@ -294,16 +259,7 @@ if __name__=="__main__":
     parser.add_argument("--shuffle_classes", default=False, type=boolean, help="Shuffle classes in the hierarchy")
     parser.add_argument("--beta", default=0, type=float, help="Softness parameter: the higher, the closer to one-hot encoding")
     parser.add_argument("--alpha", type=float, default=0, help="Decay parameter for hierarchical cross entropy.")
-    # Devise/B&D ----------------------------------------------------------------------------------------------------------------------------------------------
-    parser.add_argument("--devise", type=boolean, default=False, help="Use DeViSe label embeddings")
-    parser.add_argument("--devise_single_negative", type=boolean, default=False, help="Use one negative per samples instead of all")
-    parser.add_argument("--barzdenzler", type=boolean, default=False, help="Use Barz&Denzler label embeddings")
-    parser.add_argument("--train_backbone_after", default=float("inf"), type=float, help="Start training backbone too after this many steps")
-    parser.add_argument("--use_2fc", default=False, type=boolean, help="Use two FC layers for Devise")
-    parser.add_argument("--fc_inner_dim", default=1024, type=int, help="If use_2fc is True, their inner dimension.")
-    parser.add_argument("--lr_fc", default=1e-3, type=float, help="learning rate for FC layers")
-    parser.add_argument("--weight_decay_fc", default=0.0, type=float, help="weight decay of FC layers")
-    parser.add_argument("--use_fc_batchnorm", default=False, type=boolean, help="Batchnorm layer in network head")
+
     # Data/paths ----------------------------------------------------------------------------------------------------------------------------------------------
     parser.add_argument("--data", default="tiered-imagenet-224", help="id of the dataset to use: | ".join(DATASET_NAMES))
     parser.add_argument("--target_size", default=224, type=int, help="Size of image input to the network (target resize after data augmentation)")
@@ -319,8 +275,6 @@ if __name__=="__main__":
     parser.add_argument("--workers", default=2, type=int, help="number of data loading workers")
     parser.add_argument("--seed", default=None, type=int, help="seed for initializing training. ")
     parser.add_argument("--gpu", default=0, type=int, help="GPU id to use.")
-    parser.add_argument("--out_folder",default=None,type=str,help="Path to model checkpoint")
-
     ## CRM ----------------------------------------------------------------------------------
     parser.add_argument("--rerank",default=0,type=int,help='whether to use CRM or not')
 
