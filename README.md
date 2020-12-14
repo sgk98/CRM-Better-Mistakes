@@ -1,5 +1,5 @@
 # Conditional Risk Minimization(CRM) for making better mistakes
-Simplified Code for our Paper "Amending Mistakes Post-hoc in Deep Networks by Leveraging Class Hierarchies, Under Review"
+Simplified Code for our Paper **Amending Mistakes Post-hoc in Deep Networks by Leveraging Class Hierarchies, Under Review**
 [Shyamgopal Karthik](https://github.com/sgk98), [Ameya Prabhu](https://drimpossible.github.io), [Puneet K. Dokania](https://puneetkdokania.github.io), [Vineet Gandhi](https://faculty.iiit.ac.in/~vgandhi/)
 
 **Paper:** [https://openreview.net/pdf?id=193sEnKY1ij](https://openreview.net/pdf?id=193sEnKY1ij)
