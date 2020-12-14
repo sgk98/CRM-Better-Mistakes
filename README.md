@@ -12,11 +12,18 @@ We resort to the classical Conditional Risk Minimization (CRM) framework for hie
 ## Installation 
 Follow the setup presented in https://github.com/fiveai/making-better-mistakes to prepare the dataset splits as well the conda environment.
 
+## Training and Pre-Trained Model
+Train the models using the code available in https://github.com/fiveai/making-better-mistakes. We shall provide our pre-trained models shortly.
+Alternatively, this codebase should work with most feedforward models in implemented in PyTorch with just a few modifications in `compute_results.py`
+
 ## Usage
  - Set the paths to the tiered-ImageNet and/or iNaturalist19 dataset in `data_paths.yml`
  - Given a folder with checkpoints, `python3 src/optimal_epoch.py <path_to_directory>` can be used to find the best 5 checkpoints to benchmark.
  - Set the paths to the checkpoint in the corresponding experiment file in `experiments/<experiment.sh>`
  - `bash experiments/experiment.sh` should reproduce the numbers present in the corresponding log file `logs/experiment.csv`
+
+
+##### If you discover any bugs in the code please contact me, I will cross-check them with my nightmares.
  
 ## Citation
 
