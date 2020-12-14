@@ -2,9 +2,9 @@
 Simplified Code for our Paper "Amending Mistakes Post-hoc in Deep Networks by Leveraging Class Hierarchies, Under Review"
 [Shyamgopal Karthik](https://github.com/sgk98), [Ameya Prabhu](https://drimpossible.github.io), [Puneet K. Dokania](https://puneetkdokania.github.io), [Vineet Gandhi](https://faculty.iiit.ac.in/~vgandhi/)
 
-[[Paper](https://openreview.net/pdf?id=193sEnKY1ij)]
+**Paper:** [https://openreview.net/pdf?id=193sEnKY1ij](https://openreview.net/pdf?id=193sEnKY1ij)
 
-<a href="url"><img src="https://github.com/sgk98/CRM-Better-Mistakes/blob/main/CRM_figure.png" height="300" width="381" ></a>
+<a href="url"><img src="https://github.com/sgk98/CRM-Better-Mistakes/blob/main/CRM_figure.png" ></a>
 
 We resort to the classical Conditional Risk Minimization (CRM) framework for hierarchy aware classification. Given a cost matrix and a reliable estimate of likelihoods (obtained from a trained network), CRM simply amends mistakes at inference time; it needs no extra parameters; it requires adding just one line of code to the standard cross-entropy baseline. It significantly outperforms the state-of-the-art and consistently obtains large reductions in the average hierarchical distance of top-k predictions across datasets, with very little loss in accuracy. Since CRM does not require retraining or fine-tuning of any hyperparameter, it can be used with any off-the-shelf cross-entropy trained model. 
 
