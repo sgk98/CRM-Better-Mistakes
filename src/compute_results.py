@@ -259,7 +259,16 @@ if __name__=="__main__":
     parser.add_argument("--shuffle_classes", default=False, type=boolean, help="Shuffle classes in the hierarchy")
     parser.add_argument("--beta", default=0, type=float, help="Softness parameter: the higher, the closer to one-hot encoding")
     parser.add_argument("--alpha", type=float, default=0, help="Decay parameter for hierarchical cross entropy.")
-
+    # Devise/B&D ----------------------------------------------------------------------------------------------------------------------------------------------
+    parser.add_argument("--devise", type=boolean, default=False, help="Use DeViSe label embeddings")
+    parser.add_argument("--devise_single_negative", type=boolean, default=False, help="Use one negative per samples instead of all")
+    parser.add_argument("--barzdenzler", type=boolean, default=False, help="Use Barz&Denzler label embeddings")
+    parser.add_argument("--train_backbone_after", default=float("inf"), type=float, help="Start training backbone too after this many steps")
+    parser.add_argument("--use_2fc", default=False, type=boolean, help="Use two FC layers for Devise")
+    parser.add_argument("--fc_inner_dim", default=1024, type=int, help="If use_2fc is True, their inner dimension.")
+    parser.add_argument("--lr_fc", default=1e-3, type=float, help="learning rate for FC layers")
+    parser.add_argument("--weight_decay_fc", default=0.0, type=float, help="weight decay of FC layers")
+    parser.add_argument("--use_fc_batchnorm", default=False, type=boolean, help="Batchnorm layer in network head")
     # Data/paths ----------------------------------------------------------------------------------------------------------------------------------------------
     parser.add_argument("--data", default="tiered-imagenet-224", help="id of the dataset to use: | ".join(DATASET_NAMES))
     parser.add_argument("--target_size", default=224, type=int, help="Size of image input to the network (target resize after data augmentation)")
