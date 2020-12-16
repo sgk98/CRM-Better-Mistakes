@@ -22,6 +22,9 @@ Alternatively, this codebase should work with most feedforward models in impleme
  - Set the paths to the checkpoint in the corresponding experiment file in `experiments/<experiment.sh>`
  - `bash experiments/experiment.sh` should reproduce the numbers present in the corresponding log file `logs/experiment.csv`
 
+ Each row in the log file corresponds to the results of one checkpoint.
+ The format of each row is: `top-1 accuracy, hierarchical distance@1, hierarchical distance@5, hierarchical distance@20, avg. mistake severity, ECE, MCE `
+
 
 ##### If you discover any bugs in the code please contact me, I will cross-check them with my nightmares.
  
