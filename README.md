@@ -1,5 +1,5 @@
 # Conditional Risk Minimization(CRM) for making better mistakes
-Simplified Code for our Paper **Amending Mistakes Post-hoc in Deep Networks by Leveraging Class Hierarchies, Under Review**
+Simplified Code for our Paper **No Cost Likelihood Manipulation at Test Time for Making Better Mistakes in Deep Networks, ICLR 2021**
 [Shyamgopal Karthik](https://github.com/sgk98), [Ameya Prabhu](https://drimpossible.github.io), [Puneet K. Dokania](https://puneetkdokania.github.io), [Vineet Gandhi](https://faculty.iiit.ac.in/~vgandhi/)
 
 **Paper:** [https://openreview.net/pdf?id=193sEnKY1ij](https://openreview.net/pdf?id=193sEnKY1ij)
@@ -13,7 +13,11 @@ We resort to the classical Conditional Risk Minimization (CRM) framework for hie
 Follow the setup presented in https://github.com/fiveai/making-better-mistakes to prepare the dataset splits as well the conda environment.
 
 ## Training and Pre-Trained Model
-Train the models using the code available in https://github.com/fiveai/making-better-mistakes. We shall provide our pre-trained models shortly.
+Train the models using the code available in https://github.com/fiveai/making-better-mistakes. 
+The pre-trained models can be found here: 
+tiered-ImageNet: https://drive.google.com/file/d/1gMcpBSKTuN_E5dPQm2ZFF_WUSOOUI9yO/view?usp=sharing
+
+iNaturalist-19: https://drive.google.com/file/d/1gZX10ac03ZSFL9-3K_VmND6SnaZobdqw/view?usp=sharing
 Alternatively, this codebase should work with most feedforward models in implemented in PyTorch with just a few modifications in `compute_results.py`
 
 ## Usage
@@ -33,14 +37,16 @@ Alternatively, this codebase should work with most feedforward models in impleme
 If you find our work useful/interesting, please consider citing:
 ```
 @inproceedings{
-anonymous2021amending,
-title={Amending Mistakes Post-hoc in Deep Networks by Leveraging Class Hierarchies},
-author={Anonymous},
-booktitle={Submitted to International Conference on Learning Representations},
+karthik2021no,
+title={No Cost Likelihood Manipulation at Test Time for Making Better Mistakes in Deep Networks},
+author={Shyamgopal Karthik and Ameya Prabhu and Puneet K. Dokania and Vineet Gandhi},
+booktitle={International Conference on Learning Representations},
 year={2021},
-url={https://openreview.net/forum?id=193sEnKY1ij},
-note={under review}
+url={https://openreview.net/forum?id=193sEnKY1ij}
 }
+```
+If you find the dataset splits as well as the class hierarchies, please cite:
+```
 @InProceedings{bertinetto2020making,
 author = {Bertinetto, Luca and Mueller, Romain and Tertikas, Konstantinos and Samangooei, Sina and Lord, Nicholas A.},
 title = {Making Better Mistakes: Leveraging Class Hierarchies With Deep Networks},
