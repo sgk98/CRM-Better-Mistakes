@@ -1,3 +1,4 @@
+#This code is based on the implementation of calibration functions available here: https://github.com/dirichletcal/experiments_neurips/blob/master/calib/utils/functions.py
 import numpy as np
 from scipy.stats import rankdata
 from scipy.stats import friedmanchisquare
