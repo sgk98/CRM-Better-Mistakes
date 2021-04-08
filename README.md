@@ -45,7 +45,7 @@ year={2021},
 url={https://openreview.net/forum?id=193sEnKY1ij}
 }
 ```
-If you find the dataset splits as well as the class hierarchies, please cite:
+If you find the dataset splits as well as the class hierarchies useful, please cite:
 ```
 @InProceedings{bertinetto2020making,
 author = {Bertinetto, Luca and Mueller, Romain and Tertikas, Konstantinos and Samangooei, Sina and Lord, Nicholas A.},
